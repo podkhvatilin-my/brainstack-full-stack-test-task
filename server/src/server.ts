@@ -6,7 +6,9 @@ const fastify = Fastify({
 });
 
 await fastify.register(cors, {
-  origin: true,
+  origin: process.env.NODE_ENV === 'production'
+    ? process.env.CORS_ORIGIN || false
+    : true,
 });
 
 fastify.get("/api/health", async (request, reply) => {

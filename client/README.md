@@ -1,12 +1,55 @@
-# React + TypeScript + Vite
+# Client Application
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + TypeScript + Vite frontend application.
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- React 19
+- TypeScript
+- Vite 7
+- @vitejs/plugin-react
 
-## React Compiler
+## Development
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Environment Variables
+
+Copy `.env.example` to `.env`:
+
+```bash
+cp .env.example .env
+```
+
+Available variables:
+- `VITE_API_URL` - Backend API URL (default: http://localhost:3000)
+
+### Run Development Server
+
+From the client directory:
+
+```bash
+npm run dev
+```
+
+Or from the root directory:
+
+```bash
+npm run dev
+```
+
+The application will be available at http://localhost:8080
+
+### Build for Production
+
+```bash
+npm run build
+```
+
+### Preview Production Build
+
+```bash
+npm run preview
+```
+
+## API Integration
+
+API requests to `/api` are proxied to the backend server configured in `vite.config.ts`.
