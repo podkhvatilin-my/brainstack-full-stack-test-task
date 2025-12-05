@@ -1,0 +1,12 @@
+{
+  "name": "brainstack-full-stack-test-task",
+  "version": "1.0.0",
+  "scripts": {
+    "install:all": "npm install && cd client && npm install && cd ../server && npm install && cd ..",
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "build": "npm run build --prefix client"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
