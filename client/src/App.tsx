@@ -1,6 +1,6 @@
 import { useCamera } from "./hooks/useCamera";
 import { usePhotoCapture } from "./hooks/usePhotoCapture";
-import { useImageUpload } from "./hooks/useImageUpload";
+import { usePalmReading } from "./hooks/usePalmReading";
 import { CameraView } from "./components/CameraView/CameraView";
 import { PhotoPreview } from "./components/PhotoPreview/PhotoPreview";
 import { StartButton } from "./components/StartButton/StartButton";
@@ -9,13 +9,12 @@ import styles from "./App.module.css";
 export function App() {
   const { videoRef, stream, isCameraActive, startCamera, stopCamera } = useCamera();
   const { canvasRef, capturePhoto } = usePhotoCapture();
-  const { capturedImage, captureAndUpload, reset, isUploading, uploadError } = 
-    useImageUpload();
+  const { capturedImage, job, error, isProcessing, startReading, reset } = usePalmReading();
 
   const handleCapture = () => {
     const dataUrl = capturePhoto(videoRef.current);
     if (dataUrl) {
-      captureAndUpload(dataUrl);
+      startReading(dataUrl);
     }
   };
 
@@ -30,7 +29,7 @@ export function App() {
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>Photo Capture App</h1>
+      <h1 className={styles.title}>Palm Lines Prediction</h1>
 
       <div className={styles.cameraContainer}>
         {!isCameraActive && !capturedImage && (
@@ -51,8 +50,9 @@ export function App() {
             imageSrc={capturedImage}
             onRetake={handleRetake}
             onClose={handleClose}
-            isUploading={isUploading}
-            uploadError={uploadError}
+            isProcessing={isProcessing}
+            error={error}
+            job={job}
           />
         )}
       </div>
