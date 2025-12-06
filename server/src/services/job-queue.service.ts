@@ -1,36 +1,25 @@
-import { randomUUID } from "crypto";
 import { EventEmitter } from "events";
-
-export type JobStatus = "pending" | "processing" | "completed" | "failed";
-
-export interface Job<T = any> {
-  id: string;
-  status: JobStatus;
-  progress: number;
-  message: string;
-  result?: T;
-  error?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { Job, JOB_STATUS } from "../models/job.model";
+import { JOB_QUEUE } from "../config";
 
 const jobEmitter = new EventEmitter();
 const jobs = new Map<string, Job>();
 
 export const createJob = (): string => {
-  const id = randomUUID();
-  const job: Job = {
-    id,
-    status: "pending",
-    progress: 0,
-    message: "Job created",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
+  if (jobs.size >= JOB_QUEUE.MAX_JOBS) {
+    cleanupOldJobs(JOB_QUEUE.AGGRESSIVE_CLEANUP_AGE_MS);
 
-  jobs.set(id, job);
-  jobEmitter.emit(`job:${id}`, job);
-  return id;
+    if (jobs.size >= JOB_QUEUE.MAX_JOBS) {
+      throw new Error("Job queue is full");
+    }
+  }
+
+  const job = new Job();
+
+  jobs.set(job.id, job);
+  jobEmitter.emit(`job:${job.id}`, job);
+
+  return job.id;
 };
 
 export const getJob = (id: string): Job | undefined => {
@@ -39,12 +28,14 @@ export const getJob = (id: string): Job | undefined => {
 
 export const updateJob = (
   id: string,
-  updates: Partial<Pick<Job, "status" | "progress" | "message" | "result" | "error">>
+  updates: Partial<
+    Pick<Job, "status" | "progress" | "message" | "result" | "error">
+  >
 ): void => {
   const job = jobs.get(id);
   if (!job) return;
 
-  Object.assign(job, updates, { updatedAt: new Date() });
+  job.update(updates);
   jobs.set(id, job);
   jobEmitter.emit(`job:${id}`, job);
 };
@@ -53,28 +44,34 @@ export const deleteJob = (id: string): void => {
   jobs.delete(id);
 };
 
-export const subscribeToJob = (id: string, callback: (job: Job) => void): (() => void) => {
+export const subscribeToJob = (
+  id: string,
+  callback: (job: Job) => void
+): (() => void) => {
   const listener = (job: Job) => callback(job);
+
   jobEmitter.on(`job:${id}`, listener);
-  
-  // Return unsubscribe function
+
   return () => jobEmitter.off(`job:${id}`, listener);
 };
 
-// Clean up old completed/failed jobs
-export const cleanupOldJobs = (maxAgeMs: number = 1000 * 60 * 60): void => {
+export const cleanupOldJobs = (
+  maxAgeMs: number = JOB_QUEUE.JOB_MAX_AGE_MS
+): void => {
   const now = Date.now();
+
   for (const [id, job] of jobs.entries()) {
     if (
-      (job.status === "completed" || job.status === "failed") &&
+      (job.status === JOB_STATUS.COMPLETED ||
+        job.status === JOB_STATUS.FAILED) &&
       now - job.updatedAt.getTime() > maxAgeMs
     ) {
       jobs.delete(id);
+      jobEmitter.removeAllListeners(`job:${id}`);
     }
   }
 };
 
-// Cleanup old jobs every 10 minutes
 setInterval(() => {
   cleanupOldJobs();
-}, 1000 * 60 * 10);
+}, JOB_QUEUE.CLEANUP_INTERVAL_MS);

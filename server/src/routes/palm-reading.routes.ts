@@ -5,6 +5,7 @@ import {
   getJob,
   subscribeToJob,
 } from "../services/job-queue.service";
+import { JOB_STATUS } from "../models/job.model";
 
 export const palmReadingRoute: FastifyPluginAsync = async (fastify) => {
   fastify.post("/start", async (request, reply) => {
@@ -31,29 +32,36 @@ export const palmReadingRoute: FastifyPluginAsync = async (fastify) => {
     }
   });
 
-  fastify.get("/progress/:jobId", { sse: true }, async (request, reply) => {
-    const { jobId } = request.params as { jobId: string };
+  fastify.get<{ Params: { jobId: string } }>(
+    "/progress/:jobId",
+    { sse: true },
+    async (request, reply) => {
+      const { jobId } = request.params;
 
-    const job = getJob(jobId);
+      const job = getJob(jobId);
 
-    if (!job) {
-      return reply.code(404).send({ error: "Job not found" });
-    }
-
-    reply.sse.keepAlive();
-
-    await reply.sse.send({ data: job });
-
-    const unsubscribe = subscribeToJob(jobId, async (updatedJob) => {
-      await reply.sse.send({ data: updatedJob });
-
-      if (updatedJob.status === "completed" || updatedJob.status === "failed") {
-        unsubscribe();
+      if (!job) {
+        return reply.code(404).send({ error: "Job not found" });
       }
-    });
 
-    reply.sse.onClose(() => {
-      unsubscribe();
-    });
-  });
+      reply.sse.keepAlive();
+
+      await reply.sse.send({ data: job });
+
+      const unsubscribe = subscribeToJob(jobId, async (updatedJob) => {
+        await reply.sse.send({ data: updatedJob });
+
+        if (
+          updatedJob.status === JOB_STATUS.COMPLETED ||
+          updatedJob.status === JOB_STATUS.FAILED
+        ) {
+          reply.sse.close();
+        }
+      });
+
+      reply.sse.onClose(() => {
+        unsubscribe();
+      });
+    }
+  );
 };

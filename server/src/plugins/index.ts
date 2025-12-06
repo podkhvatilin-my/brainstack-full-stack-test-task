@@ -5,6 +5,7 @@ import sse from "@fastify/sse";
 import helmet from "@fastify/helmet";
 import rateLimit from "@fastify/rate-limit";
 import imageStorage from "./image-storage.plugin";
+import { MULTIPART, RATE_LIMIT } from "../config";
 
 export async function registerPlugins(fastify: FastifyInstance) {
   await fastify.register(helmet, {
@@ -19,8 +20,8 @@ export async function registerPlugins(fastify: FastifyInstance) {
   });
 
   await fastify.register(rateLimit, {
-    max: 100,
-    timeWindow: "15 minutes",
+    max: RATE_LIMIT.MAX_REQUESTS,
+    timeWindow: RATE_LIMIT.TIME_WINDOW,
   });
 
   await fastify.register(cors, {
@@ -33,7 +34,7 @@ export async function registerPlugins(fastify: FastifyInstance) {
 
   await fastify.register(multipart, {
     limits: {
-      fileSize: 10 * 1024 * 1024, // 10 MB
+      fileSize: MULTIPART.MAX_FILE_SIZE,
     },
   });
 

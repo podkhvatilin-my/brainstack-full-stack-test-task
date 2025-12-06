@@ -3,6 +3,7 @@ import { type FastifyInstance } from "fastify";
 import { openai } from "../lib/openai";
 import { PROMPTS } from "../lib/constants";
 import { updateJob } from "./job-queue.service";
+import { JOB_STATUS } from "../models/job.model";
 
 export interface HandDetectionResult {
   containsHand: boolean;
@@ -15,58 +16,50 @@ export const detectHand = async (
   buffer: Buffer,
   mimeType: string
 ): Promise<HandDetectionResult> => {
-  const imageId = randomUUID();
+  const base64Image = buffer.toString("base64");
 
-  try {
-    fastify.imageStorage.save(imageId, buffer, mimeType);
-
-    const base64Image = buffer.toString("base64");
-
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: PROMPTS.PALM_DETECTION,
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      {
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: PROMPTS.PALM_DETECTION,
+          },
+          {
+            type: "image_url",
+            image_url: {
+              url: `data:${mimeType};base64,${base64Image}`,
             },
-            {
-              type: "image_url",
-              image_url: {
-                url: `data:${mimeType};base64,${base64Image}`,
-              },
-            },
-          ],
-        },
-      ],
-      max_tokens: 100,
-    });
+          },
+        ],
+      },
+    ],
+    max_tokens: 100,
+  });
 
-    const answer = response.choices[0].message.content || "";
-    const containsHand = answer.toLowerCase().includes("yes");
+  const answer = response.choices[0].message.content ?? "";
+  const containsHand = answer.toLowerCase().includes("yes");
 
-    // Delete the image if no hand was detected
-    if (!containsHand) {
-      fastify.imageStorage.delete(imageId);
-      return {
-        containsHand,
-        explanation: answer,
-        imageId: null,
-      };
-    }
-
+  if (!containsHand) {
     return {
       containsHand,
       explanation: answer,
-      imageId,
+      imageId: null,
     };
-  } catch (error) {
-    // Delete image on error
-    fastify.imageStorage.delete(imageId);
-    throw error;
   }
+
+  const imageId = randomUUID();
+
+  fastify.imageStorage.save(imageId, buffer, mimeType);
+
+  return {
+    containsHand,
+    explanation: answer,
+    imageId,
+  };
 };
 
 export const processPalmReading = async (
@@ -77,7 +70,7 @@ export const processPalmReading = async (
 ): Promise<void> => {
   try {
     updateJob(jobId, {
-      status: "processing",
+      status: JOB_STATUS.PROCESSING,
       progress: 10,
       message: "Detecting hand in image...",
     });
@@ -85,7 +78,7 @@ export const processPalmReading = async (
     const result = await detectHand(fastify, buffer, mimeType);
 
     updateJob(jobId, {
-      status: "processing",
+      status: JOB_STATUS.PROCESSING,
       progress: 50,
       message: result.containsHand
         ? "Hand detected! Reading palm lines for predictions..."
@@ -94,17 +87,18 @@ export const processPalmReading = async (
 
     if (!result.containsHand) {
       updateJob(jobId, {
-        status: "completed",
+        status: JOB_STATUS.COMPLETED,
         progress: 100,
         message: "Analysis complete",
         result,
       });
+
       return;
     }
 
     // Simulate palm lines analysis (replace with actual palm reading logic later)
     updateJob(jobId, {
-      status: "processing",
+      status: JOB_STATUS.PROCESSING,
       progress: 75,
       message: "Analyzing palm lines and making predictions...",
     });
@@ -113,14 +107,14 @@ export const processPalmReading = async (
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     updateJob(jobId, {
-      status: "completed",
+      status: JOB_STATUS.COMPLETED,
       progress: 100,
       message: "Palm lines prediction complete!",
       result,
     });
   } catch (error) {
     updateJob(jobId, {
-      status: "failed",
+      status: JOB_STATUS.FAILED,
       progress: 0,
       message: "Failed to process palm reading",
       error: error instanceof Error ? error.message : "Unknown error",
