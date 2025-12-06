@@ -1,5 +1,8 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
+import multipart from "@fastify/multipart";
+import imageStorage from "./plugins/imageStorage.js";
+import { routes } from "./routes/index.js";
 
 const fastify = Fastify({
   logger: true,
@@ -10,10 +13,14 @@ await fastify.register(cors, {
     ? process.env.CORS_ORIGIN || false
     : true,
 });
-
-fastify.get("/api/health", async (request, reply) => {
-  return { status: "ok" };
+await fastify.register(multipart, {
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10 MB
+  },
 });
+await fastify.register(imageStorage);
+
+await fastify.register(routes, { prefix: '/api' });
 
 const start = async () => {
   try {

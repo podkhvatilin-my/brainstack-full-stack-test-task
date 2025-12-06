@@ -1,5 +1,6 @@
 import { useCamera } from "./hooks/useCamera";
 import { usePhotoCapture } from "./hooks/usePhotoCapture";
+import { useImageUpload } from "./hooks/useImageUpload";
 import { CameraView } from "./components/CameraView/CameraView";
 import { PhotoPreview } from "./components/PhotoPreview/PhotoPreview";
 import { StartButton } from "./components/StartButton/StartButton";
@@ -7,19 +8,23 @@ import styles from "./App.module.css";
 
 export function App() {
   const { videoRef, stream, isCameraActive, startCamera, stopCamera } = useCamera();
-  const { canvasRef, capturedImage, capturePhoto, retakePhoto } =
-    usePhotoCapture();
+  const { canvasRef, capturePhoto } = usePhotoCapture();
+  const { capturedImage, captureAndUpload, reset, isUploading, uploadError } = 
+    useImageUpload();
 
   const handleCapture = () => {
-    capturePhoto(videoRef.current);
+    const dataUrl = capturePhoto(videoRef.current);
+    if (dataUrl) {
+      captureAndUpload(dataUrl);
+    }
   };
 
   const handleRetake = () => {
-    retakePhoto();
+    reset();
   };
 
   const handleClose = () => {
-    retakePhoto();
+    reset();
     stopCamera();
   };
 
@@ -46,6 +51,8 @@ export function App() {
             imageSrc={capturedImage}
             onRetake={handleRetake}
             onClose={handleClose}
+            isUploading={isUploading}
+            uploadError={uploadError}
           />
         )}
       </div>

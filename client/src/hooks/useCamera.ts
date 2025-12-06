@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useMemo } from "react";
+import { useState, useRef, useCallback } from "react";
 
 export const useCamera = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -29,14 +29,11 @@ export const useCamera = () => {
     setIsCameraActive(false);
   }, [stream]);
 
-  return useMemo(
-    () => ({
-      videoRef,
-      stream,
-      isCameraActive,
-      startCamera,
-      stopCamera,
-    }),
-    [stream, isCameraActive, startCamera, stopCamera]
-  );
+  return {
+    videoRef,
+    stream,
+    isCameraActive,
+    startCamera,
+    stopCamera,
+  };
 };

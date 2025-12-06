@@ -44,3 +44,20 @@
   outline: 2px solid hsl(var(--ring));
   outline-offset: 2px;
 }
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.status {
+  color: hsl(var(--primary));
+  font-weight: 500;
+  margin: 8px 0;
+}
+
+.error {
+  color: hsl(0 84.2% 60.2%);
+  font-weight: 500;
+  margin: 8px 0;
+}
