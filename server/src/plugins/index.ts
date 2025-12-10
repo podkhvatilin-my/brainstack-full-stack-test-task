@@ -1,11 +1,22 @@
 import { type FastifyInstance } from "fastify";
 import cors from "@fastify/cors";
 import multipart from "@fastify/multipart";
-import sse from "@fastify/sse";
 import helmet from "@fastify/helmet";
 import rateLimit from "@fastify/rate-limit";
-import imageStorage from "./image-storage.plugin";
-import { MULTIPART, RATE_LIMIT } from "../config";
+
+const CONFIG = {
+  isProduction: process.env.NODE_ENV === "production",
+  cors: {
+    origin: process.env.CORS_ORIGIN || false,
+  },
+  rateLimit: {
+    maxRequests: 100,
+    timeWindow: "15 minutes",
+  },
+  multipart: {
+    maxFileSize: 10 * 1024 * 1024, // 10 MB
+  },
+};
 
 export async function registerPlugins(fastify: FastifyInstance) {
   await fastify.register(helmet, {
@@ -20,24 +31,18 @@ export async function registerPlugins(fastify: FastifyInstance) {
   });
 
   await fastify.register(rateLimit, {
-    max: RATE_LIMIT.MAX_REQUESTS,
-    timeWindow: RATE_LIMIT.TIME_WINDOW,
+    max: CONFIG.rateLimit.maxRequests,
+    timeWindow: CONFIG.rateLimit.timeWindow,
   });
 
   await fastify.register(cors, {
-    origin:
-      process.env.NODE_ENV === "production"
-        ? process.env.CORS_ORIGIN || false
-        : true,
+    origin: CONFIG.isProduction ? CONFIG.cors.origin : true,
     credentials: true,
   });
 
   await fastify.register(multipart, {
     limits: {
-      fileSize: MULTIPART.MAX_FILE_SIZE,
+      fileSize: CONFIG.multipart.maxFileSize,
     },
   });
-
-  await fastify.register(sse);
-  await fastify.register(imageStorage);
 }
