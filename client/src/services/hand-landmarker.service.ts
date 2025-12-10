@@ -4,6 +4,11 @@ import {
   type HandLandmarkerResult,
 } from "@mediapipe/tasks-vision";
 
+const MEDIAPIPE_WASM_URL =
+  "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm";
+const HAND_LANDMARKER_MODEL_URL =
+  "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task";
+
 type HandLandmarkerState = {
   landmarker: HandLandmarker | null;
   initialized: boolean;
@@ -17,14 +22,11 @@ const createInitialState = (): HandLandmarkerState => ({
 let state = createInitialState();
 
 const createVisionFilesetResolver = () =>
-  FilesetResolver.forVisionTasks(
-    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
-  );
+  FilesetResolver.forVisionTasks(MEDIAPIPE_WASM_URL);
 
 const createHandLandmarkerOptions = () => ({
   baseOptions: {
-    modelAssetPath:
-      "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+    modelAssetPath: HAND_LANDMARKER_MODEL_URL,
     delegate: "GPU" as const,
   },
   runningMode: "IMAGE" as const,
@@ -34,6 +36,7 @@ const createHandLandmarkerOptions = () => ({
 const createHandLandmarker = async (): Promise<HandLandmarker> => {
   const vision = await createVisionFilesetResolver();
   const options = createHandLandmarkerOptions();
+
   return HandLandmarker.createFromOptions(vision, options);
 };
 
@@ -62,8 +65,14 @@ export const dispose = (): void => {
     state = createInitialState();
   }
 };
+export interface HandLandmarkerService {
+  initialize: () => Promise<void>;
+  detect: (image: HTMLImageElement | ImageData) => HandLandmarkerResult | null;
+  isReady: () => boolean;
+  dispose: () => void;
+}
 
-export const handLandmarkerService = {
+export const handLandmarkerService: HandLandmarkerService = {
   initialize,
   detect,
   isReady,

@@ -1,72 +1,28 @@
-import { useEffect, useRef, useState } from "react";
-import { type HandLandmarkerResult } from "@mediapipe/tasks-vision";
-import { handLandmarkerService } from "./services/hand-landmarker.service";
-
-const drawLandmark = (
-  ctx: CanvasRenderingContext2D,
-  landmark: { x: number; y: number },
-  canvasWidth: number,
-  canvasHeight: number
-) => {
-  ctx.beginPath();
-  ctx.arc(
-    landmark.x * canvasWidth,
-    landmark.y * canvasHeight,
-    5,
-    0,
-    2 * Math.PI
-  );
-  ctx.fillStyle = "red";
-  ctx.fill();
-};
-
-const drawLandmarks = (
-  ctx: CanvasRenderingContext2D,
-  landmarks: Array<{ x: number; y: number }>,
-  canvasWidth: number,
-  canvasHeight: number
-) => {
-  landmarks.forEach((landmark) =>
-    drawLandmark(ctx, landmark, canvasWidth, canvasHeight)
-  );
-};
-
-const clearCanvas = (
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number
-) => {
-  ctx.clearRect(0, 0, width, height);
-};
-
-const renderResults = (
-  canvas: HTMLCanvasElement,
-  results: HandLandmarkerResult | null
-) => {
-  const ctx = canvas.getContext("2d");
-  if (!ctx || !results?.landmarks) return;
-
-  clearCanvas(ctx, canvas.width, canvas.height);
-  results.landmarks.forEach((landmarks) =>
-    drawLandmarks(ctx, landmarks, canvas.width, canvas.height)
-  );
-};
+import { useRef } from "react";
+import { useServices } from "./contexts";
 
 export function App() {
+  const { isInitialized, services } = useServices();
+
   const imageRef = useRef<HTMLImageElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    handLandmarkerService.initialize().then(() => setIsReady(true));
-    return () => handLandmarkerService.dispose();
-  }, []);
 
   const handleImageLoad = () => {
-    if (!isReady || !imageRef.current || !canvasRef.current) return;
+    if (!isInitialized || !imageRef.current || !canvasRef.current) return;
 
-    const results = handLandmarkerService.detect(imageRef.current);
-    renderResults(canvasRef.current, results);
+    const { opencvService } = services;
+
+    const cv = opencvService.getCV();
+
+    const src = cv.imread(imageRef.current);
+    const gray = new cv.Mat();
+
+    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+
+    cv.imshow(canvasRef.current, gray);
+
+    src.delete();
+    gray.delete();
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -99,7 +55,7 @@ export function App() {
           style={{ position: "absolute", top: 0, left: 0 }}
         />
       </div>
-      {!isReady && <p>Loading hand landmarker...</p>}
+      {!isInitialized && <p>Loading services...</p>}
     </div>
   );
 }
