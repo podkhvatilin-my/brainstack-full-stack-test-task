@@ -1,6 +1,6 @@
 import Fastify from "fastify";
-import { registerPlugins } from "./plugins";
-import { routes } from "./routes";
+import { registerPlugins } from "./plugins/index.js";
+import { routes } from "./routes/index.js";
 
 const fastify = Fastify({
   logger: true,
@@ -15,7 +15,7 @@ const start = async () => {
     const port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 
     await fastify.listen({ port, host: "0.0.0.0" });
-    console.log(`Server running on http://localhost:${port}`);
+    console.log(`Server running on port: ${port}`);
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);

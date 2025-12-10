@@ -43,6 +43,7 @@ npm run dev
 ```
 
 This runs both the client and server concurrently:
+
 - Client: http://localhost:8080
 - Server: http://localhost:3000
 
@@ -52,28 +53,41 @@ This runs both the client and server concurrently:
 npm run build
 ```
 
-This builds the client application.
+This builds both the server and client applications.
+
+### 5. Run in Production Mode
+
+```bash
+npm start
+```
+
+This runs both the built server and client in production mode:
+
+- Client: http://localhost:8080
+- Server: http://localhost:3000
 
 ## Available Scripts
 
 - `npm run install:all` - Install all dependencies
 - `npm run dev` - Run both client and server in development mode
-- `npm run build` - Build the client for production
+- `npm run dev:debug` - Run both in development mode with server debugging enabled
+- `npm run build` - Build both server and client for production
+- `npm start` - Run both server and client in production mode
 
 ## Tech Stack
 
 ### Frontend
+
 - React 19
 - TypeScript
 - Vite
-- Port: 8080
 
 ### Backend
+
 - Fastify 5
 - TypeScript
 - Native Node.js env support (--env-file)
-- Port: 3000
 
 ## API Proxy
 
-The client development server proxies API requests from `/api` to the backend server at `http://localhost:3000` (configurable via `VITE_API_URL`).
+The client development server proxies API requests from `/api` to the backend server.
