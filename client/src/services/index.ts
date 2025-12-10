@@ -1,8 +1,6 @@
-import {
-  handLandmarkerService,
-  type HandLandmarkerService,
-} from "./hand-landmarker.service";
-import { opencvService, type OpenCVService } from "./opencv.service";
+import { handLandmarkerService } from "./hand-landmarker.service";
+import { opencvService } from "./opencv.service";
+import { palmReadedService } from "./palm-readed.service";
 
 export const bootServices = async (): Promise<void> => {
   await Promise.all([
@@ -18,16 +16,4 @@ export const bootServices = async (): Promise<void> => {
     });
 };
 
-export const disposeServices = (): void => {
-  handLandmarkerService.dispose();
-};
-
-export interface Services {
-  handLandmarkerService: HandLandmarkerService;
-  opencvService: OpenCVService;
-}
-
-export const services: Services = {
-  handLandmarkerService,
-  opencvService,
-};
+export { handLandmarkerService, opencvService, palmReadedService };

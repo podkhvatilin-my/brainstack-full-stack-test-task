@@ -1,13 +1,13 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { ServicesProvider } from "./contexts";
+import { bootServices } from "./services";
 import { App } from "./app.tsx";
 import "./index.css";
 
+bootServices();
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ServicesProvider>
-      <App />
-    </ServicesProvider>
+    <App />
   </StrictMode>
 );

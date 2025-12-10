@@ -1,28 +1,40 @@
 import { useRef } from "react";
-import { useServices } from "./contexts";
+import { palmReadedService } from "./services";
 
 export function App() {
-  const { isInitialized, services } = useServices();
-
   const imageRef = useRef<HTMLImageElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const inputCanvasRef = useRef<HTMLCanvasElement>(null);
+  const outputCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const handleImageLoad = () => {
-    if (!isInitialized || !imageRef.current || !canvasRef.current) return;
+    if (
+      !imageRef.current ||
+      !inputCanvasRef.current ||
+      !outputCanvasRef.current
+    )
+      return;
 
-    const { opencvService } = services;
+    const img = imageRef.current;
+    const inputCanvas = inputCanvasRef.current;
+    const outputCanvas = outputCanvasRef.current;
 
-    const cv = opencvService.getCV();
+    inputCanvas.width = img.naturalWidth;
+    inputCanvas.height = img.naturalHeight;
+    outputCanvas.width = img.naturalWidth;
+    outputCanvas.height = img.naturalHeight;
 
-    const src = cv.imread(imageRef.current);
-    const gray = new cv.Mat();
+    const ctx = inputCanvas.getContext("2d");
+    const outputCtx = outputCanvas.getContext("2d");
 
-    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+    if (!ctx || !outputCtx) return;
 
-    cv.imshow(canvasRef.current, gray);
+    ctx.drawImage(img, 0, 0);
+    outputCtx.drawImage(img, 0, 0);
 
-    src.delete();
-    gray.delete();
+    palmReadedService.processImage({
+      inputCanvas,
+      outputCanvas,
+    });
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,17 +57,15 @@ export function App() {
         <img
           ref={imageRef}
           onLoad={handleImageLoad}
-          style={{ maxWidth: "640px", display: "block" }}
+          style={{ display: "none" }}
           alt="Upload an image"
         />
+        <canvas ref={inputCanvasRef} style={{ display: "none" }} />
         <canvas
-          ref={canvasRef}
-          width={640}
-          height={480}
-          style={{ position: "absolute", top: 0, left: 0 }}
+          ref={outputCanvasRef}
+          style={{ maxWidth: "100%", display: "block" }}
         />
       </div>
-      {!isInitialized && <p>Loading services...</p>}
     </div>
   );
 }
