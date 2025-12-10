@@ -6,8 +6,6 @@ Fastify backend API with TypeScript.
 
 - Fastify 5
 - TypeScript
-- @fastify/cors
-- tsx (for development)
 - Node.js 24 with native env file support
 
 ## Development
@@ -36,10 +34,6 @@ Or from the root directory:
 ```bash
 npm run dev
 ```
-
-The server will be available at http://localhost:3000
-
-The development server uses `tsx watch` with Node.js native `--env-file` flag for automatic restarts and environment variable loading.
 
 ### Build for Production
 
