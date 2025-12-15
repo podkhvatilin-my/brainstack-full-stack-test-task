@@ -21,13 +21,3 @@ export interface PalmLine {
 export interface AnalysisResult {
   lines: PalmLine[];
 }
-
-export interface LineConfig {
-  name: string;
-  anchors: {
-    startIdx: number;
-    endIdx: number;
-    weight: number;
-  }[];
-  baseMetrics: Partial<LineMetrics>;
-}

@@ -3,10 +3,9 @@ import {
   initHandLandmarker,
   detectHand,
 } from "./services/hand-landmarker.service";
+import { analyzePalmistry } from "./services/api.service";
 import type { AnalysisResult } from "./types";
 import { HandLandmarker, DrawingUtils } from "@mediapipe/tasks-vision";
-
-const API_URL = "http://localhost:3000/api";
 
 export const App: React.FC = () => {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
@@ -67,24 +66,15 @@ export const App: React.FC = () => {
           throw new Error("No image file available");
         }
 
-        const formData = new FormData();
-        formData.append("image", imageFile);
-        formData.append("landmarks", JSON.stringify(landmarks.map((lm) => ({ x: lm.x, y: lm.y, z: lm.z }))));
-        formData.append("imageWidth", w.toString());
-        formData.append("imageHeight", h.toString());
-
-        const response = await fetch(`${API_URL}/palmistry`, {
-          method: "POST",
-          body: formData,
+        const result = await analyzePalmistry({
+          image: imageFile,
+          landmarks: landmarks,
+          imageWidth: w,
+          imageHeight: h,
         });
 
-        if (!response.ok) {
-          throw new Error(`Server error: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        setJsonResult(data.analysis);
-        setProcessedImageSrc(data.processedImage);
+        setJsonResult(result.analysis);
+        setProcessedImageSrc(result.processedImage);
         setStatus("Analysis complete!");
       } catch (error) {
         console.error("Error processing palmistry:", error);
