@@ -1,21 +1,16 @@
 import { type FastifyInstance } from "fastify";
-import cors from "@fastify/cors";
-import multipart from "@fastify/multipart";
+import envPlugin from "./env.js";
+import corsPlugin from "./cors.js";
+import multipartPlugin from "./multipart.js";
+import errorHandlerPlugin from "./error-handler.js";
 
-const CONFIG = {
-  multipart: {
-    maxFileSize: 10 * 1024 * 1024, // 10 MB
-  },
-};
+export async function registerPlugins(fastify: FastifyInstance): Promise<void> {
+  await fastify.register(envPlugin);
+  await fastify.register(errorHandlerPlugin);
+  await fastify.register(corsPlugin);
+  await fastify.register(multipartPlugin);
 
-export async function registerPlugins(fastify: FastifyInstance) {
-  await fastify.register(cors, {
-    origin: true,
-  });
-
-  await fastify.register(multipart, {
-    limits: {
-      fileSize: CONFIG.multipart.maxFileSize,
-    },
-  });
+  if (process.env.NODE_ENV !== "production") {
+    fastify.log.info("All plugins registered successfully");
+  }
 }

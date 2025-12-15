@@ -1,25 +1,45 @@
-import Fastify from "fastify";
-import { registerPlugins } from "./plugins/index.js";
-import { routes } from "./routes/index.js";
+import { build } from "./app.js";
 
-const fastify = Fastify({
-  logger: true,
-});
+async function start() {
+  const app = await build();
 
-await registerPlugins(fastify);
-
-await fastify.register(routes, { prefix: "/api" });
-
-const start = async () => {
   try {
-    const port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
+    await app.listen({
+      port: app.config.PORT,
+      host: app.config.HOST,
+    });
 
-    await fastify.listen({ port, host: "0.0.0.0" });
-    console.log(`Server running on port: ${port}`);
+    app.log.info(`Server listening on ${app.config.HOST}:${app.config.PORT}`);
   } catch (err) {
-    fastify.log.error(err);
+    app.log.error(err);
     process.exit(1);
   }
-};
+
+  const closeGracefully = async (signal: string) => {
+    app.log.info(`Received ${signal}, closing server gracefully`);
+
+    try {
+      await app.close();
+      app.log.info("Server closed successfully");
+      process.exit(0);
+    } catch (err) {
+      app.log.error(err, "Error during graceful shutdown");
+      process.exit(1);
+    }
+  };
+
+  process.on("SIGTERM", () => closeGracefully("SIGTERM"));
+  process.on("SIGINT", () => closeGracefully("SIGINT"));
+
+  process.on("uncaughtException", (err) => {
+    app.log.error(err, "Uncaught exception");
+    process.exit(1);
+  });
+
+  process.on("unhandledRejection", (err) => {
+    app.log.error(err, "Unhandled rejection");
+    process.exit(1);
+  });
+}
 
 start();
