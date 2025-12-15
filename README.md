@@ -71,8 +71,6 @@ This runs both the built server and client in production mode:
 - `npm run install:all` - Install all dependencies
 - `npm run dev` - Run both client and server in development mode
 - `npm run dev:debug` - Run both in development mode with server debugging enabled
-- `npm run build` - Build both server and client for production
-- `npm start` - Run both server and client in production mode
 
 ## Tech Stack
 
@@ -86,7 +84,6 @@ This runs both the built server and client in production mode:
 
 - Fastify 5
 - TypeScript
-- Native Node.js env support (--env-file)
 
 ## API Proxy
 
