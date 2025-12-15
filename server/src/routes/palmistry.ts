@@ -14,7 +14,37 @@ const palmistryRoute: FastifyPluginAsync = async (fastify) => {
         200: {
           type: "object",
           properties: {
-            analysis: { type: "object" },
+            analysis: {
+              type: "object",
+              properties: {
+                lines: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      name: { type: "string" },
+                      polyline: {
+                        type: "array",
+                        items: {
+                          type: "array",
+                          items: { type: "number" },
+                        },
+                      },
+                      metrics: {
+                        type: "object",
+                        properties: {
+                          length_px: { type: "number" },
+                          curvature: { type: "number" },
+                          breaks: { type: "number" },
+                          depth_estimate: { type: "string" },
+                          forks: { type: "number" },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
             processedImage: { type: "string" },
           },
         },

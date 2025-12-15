@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview --port 5173 --host"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^0.10.21",

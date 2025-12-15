@@ -2,7 +2,7 @@ import {
   lerp,
   getQuadraticBezierPoints,
   calculateLength,
-} from "../utils/math.utils";
+} from "../utils/math.utils.js";
 import type {
   Point,
   AnalysisResult,
